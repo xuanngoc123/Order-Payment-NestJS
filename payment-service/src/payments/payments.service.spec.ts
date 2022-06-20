@@ -26,6 +26,7 @@ describe('PaymentsService', () => {
 
   const MockPaymentRepository = {
     create: jest.fn(),
+    findProduct: jest.fn(),
   };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -52,9 +53,8 @@ describe('PaymentsService', () => {
 
   describe('create', () => {
     it('[Expect-Success] Should create payment', async () => {
-      MockPaymentRepository.create.mockImplementation(() =>
-        Promise.resolve(mockedExPayment),
-      );
+      MockPaymentRepository.create.mockReturnValue(mockedExPayment);
+      MockPaymentRepository.findProduct.mockReturnValue(mockedExPayment);
       const result = await service.createPayment(mockedCreatePayment);
       expect(result).toEqual(mockedExPayment);
     });

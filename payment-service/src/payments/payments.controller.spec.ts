@@ -5,7 +5,6 @@ import { PaymentsService } from './payments.service';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
-  let service: PaymentsService;
 
   const mockPaymentService = {
     createPayment: jest.fn(),
@@ -20,7 +19,6 @@ describe('PaymentsController', () => {
       .compile();
 
     controller = module.get<PaymentsController>(PaymentsController);
-    service = module.get<PaymentsService>(PaymentsService);
   });
 
   it('should be defined', () => {
