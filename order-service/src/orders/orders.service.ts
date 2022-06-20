@@ -1,6 +1,4 @@
 import {
-  ConflictException,
-  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -52,6 +50,7 @@ export class OrdersService {
           setTimeout(async () => {
             await this.orderRepositoty.findOneAndUpdate(
               new mongoose.Types.ObjectId(createOrder['_id'].toString()),
+              req.user['id'],
               STATUS_ORDER_ENUM.DELIVERED,
             );
           }, 15000);
@@ -73,7 +72,7 @@ export class OrdersService {
           error.response.status,
         );
       }
-      // throw new InternalServerErrorException();
+      throw new InternalServerErrorException();
     }
   }
 
@@ -96,25 +95,15 @@ export class OrdersService {
   }
 
   async cancelOrder(orderId: OrderDetailDto, req: Request): Promise<IOrder> {
-    const findOrder: any | IOrder = await this.orderRepositoty.findOne(
-      orderId,
+    const orderAfterUpdate = await this.orderRepositoty.findOneAndUpdate(
+      orderId._id,
       req.user['id'],
+      STATUS_ORDER_ENUM.CANCELED,
     );
-    if (!findOrder) {
+    if (!orderAfterUpdate) {
       throw new NotFoundException();
     }
-    if (findOrder.user != req.user['id']) {
-      throw new ForbiddenException();
-    }
-    if (
-      findOrder.status !== STATUS_ORDER_ENUM.COMFIRMED &&
-      findOrder.status !== STATUS_ORDER_ENUM.CREATED
-    ) {
-      throw new ConflictException();
-    }
-    findOrder.status = STATUS_ORDER_ENUM.CANCELED;
-    findOrder.save();
-    return findOrder;
+    return orderAfterUpdate;
   }
 
   async checkStatus(orderId: OrderDetailDto, req: Request) {
@@ -127,24 +116,4 @@ export class OrdersService {
     }
     return status;
   }
-
-  // @OnEvent('order.created')
-  // handleOrderCreatedEvent(payload) {
-  //   setTimeout(this.handleTimeOut, 15000, payload);
-  // }
-
-  // async handleTimeOut(payload) {
-  // try {
-  //   const find = await this.orderRepositoty.findOneTest({
-  //     _id: new mongoose.Types.ObjectId(payload.createOrder['_id'].toString()),
-  //   });
-  //   console.log(find);
-  //   await this.orderRepositoty.findOneAndUpdate(
-  //     new mongoose.Types.ObjectId(payload.createOrder['_id'].toString()),
-  //     STATUS_ORDER_ENUM.DELIVERED,
-  //   );
-  // } catch (error) {
-  //   console.log(error);
-  // }
-  // }
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { STATUS_ORDER_ENUM } from './orders.constant';
 
 import { CreateOrderDto, GetStatusDto, OrderDetailDto } from './orders.dto';
 import { IOrder } from './orders.entity';
@@ -35,10 +34,11 @@ export class OrderRepository {
 
   async findOneAndUpdate(
     orderId: mongoose.Types.ObjectId,
+    userId: mongoose.Types.ObjectId,
     newStatus: string,
   ): Promise<IOrder> {
     return this.orderModel.findOneAndUpdate(
-      { _id: orderId, status: STATUS_ORDER_ENUM.COMFIRMED },
+      { _id: orderId, user: userId },
       { status: newStatus },
     );
   }

@@ -2,6 +2,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { request, Request } from 'express';
 import mongoose from 'mongoose';
+import { STATUS } from '../commons/status.code';
 import { ROLE_ENUM } from '../users/users.constant';
 import {
   mockedCreateOrder,
@@ -20,31 +21,15 @@ describe('OrdersService', () => {
     username: 'payload.userName',
     role: ROLE_ENUM.USER,
   };
-  class mockOrderModel {
-    constructor(private data) {}
-    new = jest.fn().mockResolvedValue(this.data);
-    save = jest.fn().mockResolvedValue(this.data);
-    // static find = jest.fn().mockResolvedValue(mockUser());
-    // static create = jest.fn().mockResolvedValue(mockUser());
-    static remove = jest.fn().mockResolvedValueOnce(true);
-    static exists = jest.fn().mockResolvedValue(false);
-    // static findOne = jest.fn().mockResolvedValue(mockUser());
-    // static findByIdAndUpdate = jest.fn().mockResolvedValue(mockUser());
-    static findByIdAndDelete = jest.fn().mockReturnThis();
-    static exec = jest.fn();
-    static deleteOne = jest.fn().mockResolvedValue(true);
-    static findById = jest.fn().mockReturnThis();
-    static getStatus = jest.fn();
-    static getOrder = jest.fn();
-  }
 
   const MockOrderRepository = {
     createOrder: jest.fn(),
     findOne: jest.fn(),
     getOrder: jest.fn(),
     getOrderDetail: jest.fn(),
-    getStauts: jest.fn(),
     findOneAndUpdate: jest.fn(),
+    getStatus: jest.fn(),
+    save: jest.fn(),
   };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -53,16 +38,17 @@ describe('OrdersService', () => {
         OrderRepository,
         {
           provide: getModelToken('Order'),
-          useValue: mockOrderModel,
+          useValue: MockOrderRepository,
         },
       ],
     })
       .overrideProvider(OrderRepository)
-      .useValue(mockOrderModel)
+      .useValue(MockOrderRepository)
       .compile();
 
     service = module.get<OrdersService>(OrdersService);
     jest.clearAllMocks();
+    jest.useFakeTimers();
   });
 
   it('should be defined', () => {
@@ -71,19 +57,7 @@ describe('OrdersService', () => {
 
   describe('create order', () => {
     it('[Expect-Success] Should create order', async () => {
-      MockOrderRepository.createOrder.mockImplementation(() =>
-        Promise.resolve(mockedExOrder),
-      );
-      const result = await service.createOrder(mockedCreateOrder, req);
-      expect(result).toEqual(mockedExOrder);
-    });
-  });
-
-  describe('create order', () => {
-    it('[Expect-Success] Should create order', async () => {
-      MockOrderRepository.createOrder.mockImplementation(() =>
-        Promise.resolve(mockedExOrder),
-      );
+      MockOrderRepository.createOrder.mockResolvedValue(mockedExOrder);
       const result = await service.createOrder(mockedCreateOrder, req);
       expect(result).toEqual(mockedExOrder);
     });
@@ -91,19 +65,22 @@ describe('OrdersService', () => {
 
   describe('get order detail', () => {
     it('[Expect-Success] Should get order detail', async () => {
-      MockOrderRepository.getOrderDetail.mockImplementation(() =>
-        Promise.resolve(mockedExOrder),
-      );
+      MockOrderRepository.findOne.mockResolvedValue(mockedExOrder);
       const result = await service.getOrderDetail(mockedOrderDetail, req);
       expect(result).toEqual(mockedExOrder);
+    });
+    it('[Expect-Exception] Not found exception', async () => {
+      try {
+        await service.getOrderDetail(mockedOrderDetail, req);
+      } catch (error) {
+        expect(error.status).toEqual(STATUS.NOT_FOUND);
+      }
     });
   });
 
   describe('get list order', () => {
     it('[Expect-Success] Should get list order', async () => {
-      MockOrderRepository.getOrder.mockImplementation(() =>
-        Promise.resolve([mockedExOrder]),
-      );
+      MockOrderRepository.getOrder.mockResolvedValue([mockedExOrder]);
       const result = await service.getOrder(req);
       expect(result).toEqual([mockedExOrder]);
     });
@@ -111,21 +88,32 @@ describe('OrdersService', () => {
 
   describe('cancel order', () => {
     it('[Expect-Success] Should cancel order', async () => {
-      MockOrderRepository.findOneAndUpdate.mockImplementation(() =>
-        Promise.resolve(mockedExOrder),
-      );
+      MockOrderRepository.findOneAndUpdate.mockResolvedValue(mockedExOrder);
       const result = await service.cancelOrder(mockedOrderDetail, req);
       expect(result).toEqual(mockedExOrder);
+    });
+    it('[Expect-Exception] Not found exception', async () => {
+      try {
+        await service.cancelOrder(mockedOrderDetail, req);
+      } catch (error) {
+        expect(error.status).toEqual(STATUS.NOT_FOUND);
+      }
     });
   });
 
   describe('check stauts', () => {
     it('[Expect-Success] Should check status', async () => {
-      MockOrderRepository.getStauts.mockImplementation(() =>
-        Promise.resolve(mockedExStatusOrder),
-      );
+      MockOrderRepository.getStatus.mockResolvedValue(mockedExStatusOrder);
       const result = await service.checkStatus(mockedOrderDetail, req);
       expect(result).toEqual(mockedExStatusOrder);
+    });
+
+    it('[Expect-Exception] Not found exception', async () => {
+      try {
+        await service.checkStatus(mockedOrderDetail, req);
+      } catch (error) {
+        expect(error.status).toEqual(STATUS.NOT_FOUND);
+      }
     });
   });
 });

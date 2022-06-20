@@ -6,7 +6,7 @@ import { OrdersService } from './orders.service';
 
 describe('OrdersController', () => {
   let controller: OrdersController;
-  let service: OrdersService;
+  // let service: OrdersService;
   let req: Request;
   const mockOrderService = {
     createOrder: jest.fn(),
@@ -25,7 +25,7 @@ describe('OrdersController', () => {
       .compile();
 
     controller = module.get<OrdersController>(OrdersController);
-    service = module.get<OrdersService>(OrdersService);
+    // service = module.get<OrdersService>(OrdersService);
   });
 
   it('should be defined', () => {

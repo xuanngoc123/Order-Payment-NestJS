@@ -5,4 +5,5 @@ export const STATUS = {
   CREATED: 201,
   BAD_REQUEST: 400,
   SERVER_INTERNAL_ERROR: 500,
+  NOT_FOUND: 404,
 };
